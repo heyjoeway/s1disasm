@@ -287,9 +287,13 @@ SetupValues:	dc.w $8000		; VDP register start number
 GameProgram:
 		tst.w	(vdp_control_port).l
 		btst	#6,($A1000D).l
-		beq.s	CheckSumCheck
+		; Autopatcher: nop this to prevent data from shifting
+		; Anyone implementing widescreen for their own hack can pretty much just
+		; make GameProgram immediately jmp to GameInit
+		;beq.s	CheckSumCheck
+		nop
 		cmpi.l	#'init',(v_init).w ; has checksum routine already run?
-		beq.w	GameInit	; if yes, branch
+		bra.w	GameInit	; if yes, branch
 
 CheckSumCheck:
 		movea.l	#EndOfHeader,a0	; start	checking bytes after the header	($200)
@@ -4333,10 +4337,10 @@ LoadTilesAsYouMove:
 		beq.s	loc_6908
 		; Draw new tiles at the top
 		moveq	#-16,d4	; Y coordinate. Note that 16 is the size of a block in pixels
-		moveq	#-16,d5 ; X coordinate
+		moveq	#-64,d5 ; X coordinate
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4 ; Y coordinate
-		moveq	#-16,d5 ; X coordinate
+		moveq	#-64,d5 ; X coordinate
 		bsr.w	DrawBlocks_LR
 
 loc_6908:
@@ -4344,10 +4348,10 @@ loc_6908:
 		beq.s	loc_6922
 		; Draw new tiles at the bottom
 		move.w	#224,d4	; Start at bottom of the screen. Since this draws from top to bottom, we don't need 224+16
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		move.w	#224,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	DrawBlocks_LR
 
 loc_6922:
@@ -4355,10 +4359,10 @@ loc_6922:
 		beq.s	loc_6938
 		; Draw new tiles on the left
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	DrawBlocks_TB
 
 loc_6938:
@@ -4366,10 +4370,10 @@ loc_6938:
 		beq.s	locret_6952
 		; Draw new tiles on the right
 		moveq	#-16,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		bsr.w	DrawBlocks_TB
 
 locret_6952:
@@ -4387,10 +4391,10 @@ DrawBGScrollBlock1:
 		beq.s	loc_6972
 		; Draw new tiles at the top
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		if Revision=0
 		moveq	#(512/16)-1,d6	 ; Draw entire row of plane
 		bsr.w	DrawBlocks_LR_2
@@ -4403,10 +4407,10 @@ loc_6972:
 		beq.s	loc_698E
 		; Draw new tiles at the top
 		move.w	#224,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		move.w	#224,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		if Revision=0
 		moveq	#(512/16)-1,d6
 		bsr.w	DrawBlocks_LR_2
@@ -4421,10 +4425,10 @@ loc_698E:
 		beq.s	loc_69BE
 		; Draw new tiles on the left
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		move.w	(v_scroll_block_1_size).w,d6
 		move.w	4(a3),d1
 		andi.w	#-16,d1		; Floor camera Y coordinate to the nearest block
@@ -4443,10 +4447,10 @@ loc_69BE:
 		beq.s	locret_69F2
 		; Draw new tiles on the right
 		moveq	#-16,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		bsr.w	Calc_VRAM_Pos
 		moveq	#-16,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		move.w	(v_scroll_block_1_size).w,d6
 		move.w	4(a3),d1
 		andi.w	#-16,d1
@@ -4465,10 +4469,10 @@ loc_69EE:
 			beq.s	locj_6D56
 			; Draw new tiles on the left
 			moveq	#-16,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			bsr.w	Calc_VRAM_Pos
 			moveq	#-16,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			bsr.w	DrawBlocks_TB
 	locj_6D56:
 
@@ -4476,10 +4480,10 @@ loc_69EE:
 			beq.s	locj_6D70
 			; Draw new tiles on the right
 			moveq	#-16,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			bsr.w	Calc_VRAM_Pos
 			moveq	#-16,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			bsr.w	DrawBlocks_TB
 	locj_6D70:
 
@@ -4531,10 +4535,10 @@ DrawBGScrollBlock2:
 		andi.w	#-16,d1
 		sub.w	d1,d4	; Get remaining coverage of screen that isn't scroll block 1
 		move.w	d4,-(sp)
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos
 		move.w	(sp)+,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		move.w	(v_scroll_block_1_size).w,d6
 		move.w	4(a3),d1
 		andi.w	#-16,d1
@@ -4555,10 +4559,10 @@ loc_6A3E:
 		andi.w	#-16,d1
 		sub.w	d1,d4
 		move.w	d4,-(sp)
-		move.w	#320,d5
+		move.w	#368,d5
 		bsr.w	Calc_VRAM_Pos
 		move.w	(sp)+,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		move.w	(v_scroll_block_1_size).w,d6
 		move.w	4(a3),d1
 		andi.w	#-16,d1
@@ -4588,10 +4592,10 @@ locret_6A80:
 		andi.w	#-16,d1
 		sub.w	d1,d4
 		move.w	d4,-(sp)
-		moveq	#-16,d5
+		moveq	#-64,d5
 		bsr.w	Calc_VRAM_Pos_Unknown
 		move.w	(sp)+,d4
-		moveq	#-16,d5
+		moveq	#-64,d5
 		moveq	#3-1,d6	; Draw only three rows
 		bsr.w	DrawBlocks_TB_2
 
@@ -4604,10 +4608,10 @@ loc_6AAC:
 		andi.w	#-16,d1
 		sub.w	d1,d4
 		move.w	d4,-(sp)
-		move.w	#320,d5
+		move.w	#368,d5
 		bsr.w	Calc_VRAM_Pos_Unknown
 		move.w	(sp)+,d4
-		move.w	#320,d5
+		move.w	#368,d5
 		moveq	#3-1,d6
 		bsr.w	DrawBlocks_TB_2
 
@@ -4624,10 +4628,10 @@ locret_6AD6:
 			beq.s	locj_6DD2
 			; Draw new tiles on the left
 			move.w	#224/2,d4	; Draw the bottom half of the screen
-			moveq	#-16,d5
+			moveq	#-64,d5
 			bsr.w	Calc_VRAM_Pos
 			move.w	#224/2,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			moveq	#3-1,d6		; Draw three rows... could this be a repurposed version of the above unused code?
 			bsr.w	DrawBlocks_TB_2
 	locj_6DD2:
@@ -4635,10 +4639,10 @@ locret_6AD6:
 			beq.s	locj_6DF2
 			; Draw new tiles on the right
 			move.w	#224/2,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			bsr.w	Calc_VRAM_Pos
 			move.w	#224/2,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			moveq	#3-1,d6
 			bsr.w	DrawBlocks_TB_2
 	locj_6DF2:
@@ -4666,7 +4670,7 @@ locret_6AD6:
 			lea	(locj_6FE4).l,a3
 			movea.w	(a3,d0.w),a3
 			beq.s	locj_6E5E
-			moveq	#-16,d5
+			moveq	#-64,d5
 			movem.l	d4/d5,-(sp)
 			bsr.w	Calc_VRAM_Pos
 			movem.l	(sp)+,d4/d5
@@ -4687,13 +4691,13 @@ locret_6AD6:
 ;===============================================================================			
 	locj_6E78:
 			moveq	#-16,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			move.b	(a2),d0
 			andi.b	#$A8,d0
 			beq.s	locj_6E8C
 			lsr.b	#1,d0
 			move.b	d0,(a2)
-			move.w	#320,d5
+			move.w	#368,d5
 	locj_6E8C:
 			lea	(locj_6DF4).l,a0
 			move.w	(v_bgscreenposy).w,d0
@@ -4714,10 +4718,10 @@ locret_6AD6:
 			beq.s	locj_6ED0
 			; Draw new tiles on the left
 			move.w	#$40,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			bsr.w	Calc_VRAM_Pos
 			move.w	#$40,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			moveq	#3-1,d6
 			bsr.w	DrawBlocks_TB_2
 	locj_6ED0:
@@ -4725,10 +4729,10 @@ locret_6AD6:
 			beq.s	locj_6EF0
 			; Draw new tiles on the right
 			move.w	#$40,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			bsr.w	Calc_VRAM_Pos
 			move.w	#$40,d4
-			move.w	#320,d5
+			move.w	#368,d5
 			moveq	#3-1,d6
 			bsr.w	DrawBlocks_TB_2
 	locj_6EF0:
@@ -4759,7 +4763,7 @@ locret_6AD6:
 			move.b	(a0,d0.w),d0
 			movea.w	locj_6FE4(pc,d0.w),a3
 			beq.s	locj_6F9A
-			moveq	#-16,d5
+			moveq	#-64,d5
 			movem.l	d4/d5,-(sp)
 			bsr.w	Calc_VRAM_Pos
 			movem.l	(sp)+,d4/d5
@@ -4780,13 +4784,13 @@ locret_6AD6:
 ;===============================================================================			
 	locj_6FB4:
 			moveq	#-16,d4
-			moveq	#-16,d5
+			moveq	#-64,d5
 			move.b	(a2),d0
 			andi.b	#$A8,d0
 			beq.s	locj_6FC8
 			lsr.b	#1,d0
 			move.b	d0,(a2)
-			move.w	#320,d5
+			move.w	#368,d5
 	locj_6FC8:
 			lea	(locj_6EF2).l,a0
 			move.w	(v_bgscreenposy).w,d0
@@ -4828,7 +4832,9 @@ locret_6AD6:
 ; when the camera's moving up or down
 ; DrawTiles_LR:
 DrawBlocks_LR:
-		moveq	#((320+16+16)/16)-1,d6	; Draw the entire width of the screen + two extra columns
+		; Draw the entire width of the screen + three extra columns
+		; Why three? Because it works, I dunno.
+		moveq	#((400+16+16+16)/16)-1,d6
 ; DrawTiles_LR_2:
 DrawBlocks_LR_2:
 		move.l	#$800000,d7	; Delta between rows of tiles
@@ -6301,11 +6307,20 @@ BuildSprites:
 		move.w	obX(a0),d3
 		sub.w	(a1),d3
 		move.w	d3,d1
+		; If you're implementing widescreen in your own hack, uncomment this
+		; line and the bmi.w below and remove the nops. I have to do this a
+		; hacky way for the autopatcher but you don't.
+		;addi.w	#40,d1
 		add.w	d0,d1
-		bmi.w	@skipObject	; left edge out of bounds
+		; Autopatcher: I think this is alright to do for S1... I don't see
+		; anywhere using the visible obRender bit. Remember... I can't
+		; shift ANY data around.
+		;bmi.w	@skipObject	; left edge out of bounds
+		nop
+		nop
 		move.w	d3,d1
 		sub.w	d0,d1
-		cmpi.w	#320,d1
+		cmpi.w	#320+40,d1
 		bge.s	@skipObject	; right edge out of bounds
 		addi.w	#128,d3		; VDP sprites start at 128px
 
@@ -6413,7 +6428,12 @@ BuildSpr_Normal:
 		move.b	(a1)+,d0	; get x-offset
 		ext.w	d0
 		add.w	d3,d0		; add x-position
-		andi.w	#$1FF,d0	; keep within 512px
+		; With widescreen, leaving in the andi.w below makes objects wrap to
+		; the left side of the screen when they're too far to the right
+		; If implementing widescreen in your own hack you can take out the nops
+		;andi.w	#$1FF,d0	; keep within 512px
+		nop
+		nop
 		bne.s	@writeX
 		addq.w	#1,d0
 
@@ -6456,7 +6476,9 @@ BuildSpr_FlipX:
 		addq.w	#8,d4
 		sub.w	d4,d0
 		add.w	d3,d0
-		andi.w	#$1FF,d0	; keep within 512px
+		;andi.w	#$1FF,d0	; keep within 512px
+		nop
+		nop
 		bne.s	@writeX
 		addq.w	#1,d0
 
@@ -6493,7 +6515,9 @@ BuildSpr_FlipY:
 		move.b	(a1)+,d0	; x-position
 		ext.w	d0
 		add.w	d3,d0
-		andi.w	#$1FF,d0
+		;andi.w	#$1FF,d0
+		nop
+		nop
 		bne.s	@writeX
 		addq.w	#1,d0
 
@@ -6536,7 +6560,9 @@ BuildSpr_FlipXY:
 		addq.w	#8,d4
 		sub.w	d4,d0
 		add.w	d3,d0
-		andi.w	#$1FF,d0
+		;andi.w	#$1FF,d0
+		nop
+		nop
 		bne.s	@writeX
 		addq.w	#1,d0
 
