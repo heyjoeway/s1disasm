@@ -366,3 +366,6 @@ fr_Float6:	equ $54
 fr_Injury:	equ $55
 fr_GetAir:	equ $56
 fr_WaterSlide:	equ $57
+
+widescreen_columns:	equ 20
+widescreen_columns_hud: equ 10
